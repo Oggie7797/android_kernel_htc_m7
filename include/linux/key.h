@@ -100,7 +100,10 @@ static inline unsigned long is_key_possessed(const key_ref_t key_ref)
 struct key {
 	atomic_t		usage;		
 	key_serial_t		serial;		
-	struct rb_node		serial_node;
+	union {
+		struct list_head graveyard_link;
+		struct rb_node		serial_node;
+	};
 	struct key_type		*type;		
 	struct rw_semaphore	sem;		
 	struct key_user		*user;		
@@ -129,6 +132,7 @@ struct key {
 #define KEY_FLAG_USER_CONSTRUCT	4	
 #define KEY_FLAG_NEGATIVE	5	
 #define KEY_FLAG_ROOT_CAN_CLEAR	6	
+#define KEY_FLAG_INVALIDATED	7	
 
 	char			*description;
 
@@ -160,6 +164,7 @@ extern struct key *key_alloc(struct key_type *type,
 #define KEY_ALLOC_NOT_IN_QUOTA	0x0002	
 
 extern void key_revoke(struct key *key);
+extern void key_invalidate(struct key *key);
 extern void key_put(struct key *key);
 
 static inline struct key *key_get(struct key *key)
@@ -270,6 +275,7 @@ extern void key_init(void);
 #define key_serial(k)			0
 #define key_get(k) 			({ NULL; })
 #define key_revoke(k)			do { } while(0)
+#define key_invalidate(k)		do { } while(0)
 #define key_put(k)			do { } while(0)
 #define key_ref_put(k)			do { } while(0)
 #define make_key_ref(k, p)		NULL
